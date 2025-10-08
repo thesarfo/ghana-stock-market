@@ -1,0 +1,8 @@
+target/
+data/
+*.db
+.env
+.git/
+README.md
+*.md
+env.example

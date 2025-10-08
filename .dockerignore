@@ -1,0 +1,29 @@
+# Git
+.git/
+.gitignore
+
+# Documentation
+*.md
+docs/
+
+# Development files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment
+.env
+env.example
+env.docker
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test files
+test_*.py
