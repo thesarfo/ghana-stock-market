@@ -9,6 +9,7 @@ use std::sync::Arc;
 pub fn create_router(
     get_use_case: Arc<crate::application::GetStockDataUseCase>,
     fetch_use_case: Arc<crate::application::FetchStockDataUseCase>,
+    portfolio_use_case: Arc<crate::application::PortfolioUseCase>,
 ) -> Router {
     Router::new()
         // Health check
@@ -58,4 +59,6 @@ pub fn create_router(
                 move || trigger_equity_refresh(fetch_use_case)
             }),
         )
+        // Portfolio endpoints
+        .nest("/api/portfolios", crate::presentation::portfolio_routes::portfolio_routes(portfolio_use_case))
 }

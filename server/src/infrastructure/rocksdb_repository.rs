@@ -1,23 +1,17 @@
 use crate::domain::{Equity, EquityLive, MarketSummary, StockRepository, TimeSeriesPoint};
 use anyhow::{Context, Result};
 use chrono::{DateTime, Utc};
-use rocksdb::{Options, DB};
-use std::path::Path;
+use rocksdb::DB;
+use std::sync::Arc;
 
 /// RocksDB implementation of the StockRepository
 pub struct RocksDbStockRepository {
-    db: DB,
+    db: Arc<DB>,
 }
 
 impl RocksDbStockRepository {
-    pub fn new<P: AsRef<Path>>(path: P) -> Result<Self> {
-        let mut opts = Options::default();
-        opts.create_if_missing(true);
-        opts.set_compression_type(rocksdb::DBCompressionType::Lz4);
-
-        let db = DB::open(&opts, path).context("Failed to open RocksDB database")?;
-
-        Ok(Self { db })
+    pub fn new(db: Arc<DB>) -> Self {
+        Self { db }
     }
 
     /// Generate key for live data storage

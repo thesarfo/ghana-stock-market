@@ -78,8 +78,8 @@ export const PriceChart: React.FC<PriceChartProps> = ({
   if (data.length === 0)
   {
     return (
-      <div className="flex items-center justify-center h-64 bg-gray-50 dark:bg-gray-800 rounded-lg">
-        <p className="text-gray-500 dark:text-gray-400">No data available</p>
+      <div className="flex items-center justify-center h-64 bg-gray-50 rounded-lg">
+        <p className="text-gray-500">No data available</p>
       </div>
     );
   }
@@ -87,10 +87,10 @@ export const PriceChart: React.FC<PriceChartProps> = ({
   return (
     <div className="w-full">
       <div className="mb-4">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+        <h3 className="text-lg font-semibold text-gray-900">
           {symbol} Price Chart
         </h3>
-        <p className="text-sm text-gray-600 dark:text-gray-400">
+        <p className="text-sm text-gray-600">
           {data.length} data points
         </p>
       </div>

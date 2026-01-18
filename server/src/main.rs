@@ -24,7 +24,8 @@ async fn main() -> Result<()> {
     info!("Starting GSE Backend Service");
 
     // Initialize database
-    let repository = Arc::new(RocksDbStockRepository::new("./data/gse.db")?);
+    let db = Arc::new(rocksdb::DB::open_default("./data/gse.db")?);
+    let repository = Arc::new(RocksDbStockRepository::new(db.clone()));
     info!("Database initialized");
 
     // Initialize API client
@@ -40,6 +41,10 @@ async fn main() -> Result<()> {
         repository.clone(),
         api_client.clone(),
     ));
+
+    // Initialize portfolio components
+    let portfolio_repository = Arc::new(crate::infrastructure::RocksDbPortfolioRepository::new(db.clone()));
+    let portfolio_use_case = Arc::new(crate::application::PortfolioUseCase::new(portfolio_repository));
 
     // Start background worker
     let worker_config = WorkerConfig {
@@ -98,7 +103,7 @@ async fn main() -> Result<()> {
     });
 
     // Create and start web server
-    let app = create_router(get_use_case, fetch_use_case)
+    let app = create_router(get_use_case, fetch_use_case, portfolio_use_case)
         .layer(TraceLayer::new_for_http())
         .layer(
             CorsLayer::new()
