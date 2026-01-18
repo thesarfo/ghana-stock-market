@@ -28,6 +28,8 @@ services:
       # Logging
       - "--log.level=WARN"
       - "--accesslog=true"
+    environment:
+      - TRAEFIK_PROVIDERS_DOCKER_APIVERSION=1.44
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - traefik-certificates:/letsencrypt
