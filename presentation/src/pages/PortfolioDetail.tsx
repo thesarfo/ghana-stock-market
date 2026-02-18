@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import type { Portfolio } from '../types/portfolio';
+import type { Portfolio, PortfolioItem } from '../types/portfolio';
 import { TransactionType } from '../types/portfolio';
 import { portfolioService } from '../services/portfolioService';
+import { apiService } from '../services/api';
 import { Card, Button, LoadingSpinner } from '../components/ui';
 import {
   ArrowLeftIcon,
@@ -12,10 +13,23 @@ import {
   ClockIcon
 } from '@heroicons/react/24/outline';
 
+/** Symbol -> current price from market data */
+type PriceMap = Record<string, number>;
+
+interface HoldingStat {
+  item: PortfolioItem;
+  costBasis: number;
+  currentPrice: number | null;
+  currentValue: number | null;
+  gainLoss: number | null;
+  gainLossPct: number | null;
+}
+
 export const PortfolioDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [portfolio, setPortfolio] = useState<Portfolio | null>(null);
+  const [currentPrices, setCurrentPrices] = useState<PriceMap>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,8 +45,19 @@ export const PortfolioDetail: React.FC = () => {
   const loadPortfolio = async (portfolioId: string) => {
     try
     {
-      const data = await portfolioService.getPortfolio(portfolioId);
-      setPortfolio(data);
+      setLoading(true);
+      const [portfolioData, stocksResponse] = await Promise.all([
+        portfolioService.getPortfolio(portfolioId),
+        apiService.getAllStocks(),
+      ]);
+      setPortfolio(portfolioData);
+      if (stocksResponse.success && stocksResponse.data) {
+        const map: PriceMap = {};
+        stocksResponse.data.forEach((s) => {
+          map[s.name] = s.price;
+        });
+        setCurrentPrices(map);
+      }
     } catch (err)
     {
       setError('Failed to load portfolio');
@@ -42,12 +67,46 @@ export const PortfolioDetail: React.FC = () => {
     }
   };
 
-  const calculateTotalValue = () => {
-    if (!portfolio) return 0;
-    // In a real app, we'd need current prices. For now, we'll use average buy price as a proxy
-    // or fetch current prices. Let's assume we have current prices available or just use cost basis for now.
-    return portfolio.items.reduce((sum, item) => sum + (item.quantity * item.average_buy_price), 0);
-  };
+  const holdingStats = useMemo((): HoldingStat[] => {
+    if (!portfolio) return [];
+    return portfolio.items.map((item: PortfolioItem) => {
+      const costBasis = item.quantity * item.average_buy_price;
+      const currentPrice = currentPrices[item.symbol] ?? null;
+      const currentValue = currentPrice != null ? item.quantity * currentPrice : null;
+      const gainLoss = currentValue != null ? currentValue - costBasis : null;
+      const gainLossPct = gainLoss != null && costBasis > 0 ? (gainLoss / costBasis) * 100 : null;
+      return {
+        item,
+        costBasis,
+        currentPrice,
+        currentValue,
+        gainLoss,
+        gainLossPct,
+      };
+    });
+  }, [portfolio, currentPrices]);
+
+  const totals = useMemo(() => {
+    const totalCostBasis = holdingStats.reduce((s: number, h: HoldingStat) => s + h.costBasis, 0);
+    const totalCurrentValue = holdingStats.reduce(
+      (s: number, h: HoldingStat) => s + (h.currentValue ?? 0),
+      0
+    );
+    const hasAnyPrice = holdingStats.some((h) => h.currentPrice != null);
+    const totalGainLoss =
+      hasAnyPrice && totalCostBasis > 0 ? totalCurrentValue - totalCostBasis : null;
+    const totalGainLossPct =
+      totalGainLoss != null && totalCostBasis > 0
+        ? (totalGainLoss / totalCostBasis) * 100
+        : null;
+    return {
+      totalCostBasis,
+      totalCurrentValue,
+      totalGainLoss,
+      totalGainLossPct,
+      hasAnyPrice,
+    };
+  }, [holdingStats]);
 
   const runSimulation = () => {
     // Simple simulation logic: assume random market growth between -10% and +20% per year
@@ -100,17 +159,57 @@ export const PortfolioDetail: React.FC = () => {
 
       {/* Header */}
       <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gray-900 p-5 sm:p-8 text-white shadow-xl">
-        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 sm:gap-6">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold mb-2 text-balance">{portfolio.name}</h1>
-            <p className="text-gray-400 flex items-center text-sm sm:text-base">
-              <ClockIcon className="size-4 mr-2" />
-              Created {new Date(portfolio.created_at).toLocaleDateString()}
-            </p>
+        <div className="relative z-10 flex flex-col gap-6">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold mb-2 text-balance">{portfolio.name}</h1>
+              <p className="text-gray-400 flex items-center text-sm sm:text-base">
+                <ClockIcon className="size-4 mr-2" />
+                Created {new Date(portfolio.created_at).toLocaleDateString()}
+              </p>
+            </div>
           </div>
-          <div className="text-left md:text-right w-full md:w-auto">
-            <p className="text-xs sm:text-sm text-gray-400 uppercase tracking-wider mb-1">Total Value (Cost Basis)</p>
-            <p className="text-3xl sm:text-4xl font-bold text-white tabular-nums">{calculateTotalValue().toFixed(2)} GHS</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+            <div>
+              <p className="text-xs sm:text-sm text-gray-400 uppercase tracking-wider mb-1">Total cost</p>
+              <p className="text-2xl sm:text-3xl font-bold text-white tabular-nums">
+                {totals.totalCostBasis.toFixed(2)} GHS
+              </p>
+            </div>
+            <div>
+              <p className="text-xs sm:text-sm text-gray-400 uppercase tracking-wider mb-1">Current value</p>
+              <p className="text-2xl sm:text-3xl font-bold text-white tabular-nums">
+                {totals.hasAnyPrice
+                  ? `${totals.totalCurrentValue.toFixed(2)} GHS`
+                  : '—'}
+              </p>
+              {!totals.hasAnyPrice && portfolio.items.length > 0 && (
+                <p className="text-xs text-gray-400 mt-0.5">Market data loading or unavailable</p>
+              )}
+            </div>
+            <div>
+              <p className="text-xs sm:text-sm text-gray-400 uppercase tracking-wider mb-1">Total return</p>
+              {totals.totalGainLoss != null && totals.totalGainLossPct != null ? (
+                <>
+                  <p
+                    className={`text-2xl sm:text-3xl font-bold tabular-nums ${
+                      totals.totalGainLoss >= 0 ? 'text-green-400' : 'text-red-400'
+                    }`}
+                  >
+                    {totals.totalGainLoss >= 0 ? '+' : ''}{totals.totalGainLoss.toFixed(2)} GHS
+                  </p>
+                  <p
+                    className={`text-sm font-medium tabular-nums ${
+                      totals.totalGainLossPct >= 0 ? 'text-green-300' : 'text-red-300'
+                    }`}
+                  >
+                    {totals.totalGainLossPct >= 0 ? '+' : ''}{totals.totalGainLossPct.toFixed(2)}%
+                  </p>
+                </>
+              ) : (
+                <p className="text-xl text-gray-400">—</p>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -128,34 +227,52 @@ export const PortfolioDetail: React.FC = () => {
               </div>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full min-w-[640px]">
                 <thead>
                   <tr className="text-left border-b border-gray-100">
-                    <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Symbol</th>
-                    <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Quantity</th>
-                    <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Avg Price</th>
-                    <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Total Cost</th>
+                    <th className="px-4 sm:px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Symbol</th>
+                    <th className="px-4 sm:px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Qty</th>
+                    <th className="px-4 sm:px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Avg cost</th>
+                    <th className="px-4 sm:px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Cost basis</th>
+                    <th className="px-4 sm:px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Current price</th>
+                    <th className="px-4 sm:px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Current value</th>
+                    <th className="px-4 sm:px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Gain/Loss</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {portfolio.items.map((item) => (
+                  {holdingStats.map(({ item, costBasis, currentPrice, currentValue, gainLoss, gainLossPct }) => (
                     <tr key={item.symbol} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4 font-medium text-gray-900">
+                      <td className="px-4 sm:px-6 py-4 font-medium text-gray-900">
                         <Link to={`/stock/${item.symbol}`} className="hover:text-primary-600 hover:underline">
                           {item.symbol}
                         </Link>
                       </td>
-                      <td className="px-6 py-4 text-right text-gray-600 tabular-nums">{item.quantity}</td>
-                      <td className="px-6 py-4 text-right text-gray-600 tabular-nums">{item.average_buy_price.toFixed(2)}</td>
-                      <td className="px-6 py-4 text-right font-medium text-gray-900 tabular-nums">
-                        {(item.quantity * item.average_buy_price).toFixed(2)}
+                      <td className="px-4 sm:px-6 py-4 text-right text-gray-600 tabular-nums">{item.quantity}</td>
+                      <td className="px-4 sm:px-6 py-4 text-right text-gray-600 tabular-nums">{item.average_buy_price.toFixed(2)}</td>
+                      <td className="px-4 sm:px-6 py-4 text-right font-medium text-gray-900 tabular-nums">
+                        {costBasis.toFixed(2)}
+                      </td>
+                      <td className="px-4 sm:px-6 py-4 text-right text-gray-600 tabular-nums">
+                        {currentPrice != null ? currentPrice.toFixed(2) : '—'}
+                      </td>
+                      <td className="px-4 sm:px-6 py-4 text-right font-medium text-gray-900 tabular-nums">
+                        {currentValue != null ? currentValue.toFixed(2) : '—'}
+                      </td>
+                      <td className="px-4 sm:px-6 py-4 text-right tabular-nums">
+                        {gainLoss != null && gainLossPct != null ? (
+                          <span className={gainLoss >= 0 ? 'text-success-600 font-medium' : 'text-danger-600 font-medium'}>
+                            {gainLoss >= 0 ? '+' : ''}{gainLoss.toFixed(2)} ({gainLossPct >= 0 ? '+' : ''}{gainLossPct.toFixed(1)}%)
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">—</span>
+                        )}
                       </td>
                     </tr>
                   ))}
                   {portfolio.items.length === 0 && (
                     <tr>
-                      <td colSpan={4} className="px-6 py-12 text-center text-gray-500">
-                        No holdings yet. Go to a stock page to add transactions.
+                      <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                        No holdings yet. Go to a stock page to add transactions (buy date & price per share).
                       </td>
                     </tr>
                   )}

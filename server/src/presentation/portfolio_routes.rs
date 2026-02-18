@@ -21,6 +21,9 @@ pub struct AddTransactionRequest {
     transaction_type: TransactionType,
     quantity: i64,
     price_per_share: f64,
+    /// Optional ISO8601 date for "when I bought" (e.g. backdating). If omitted, uses now.
+    #[serde(default)]
+    pub timestamp: Option<String>,
 }
 
 pub fn portfolio_routes(use_case: Arc<PortfolioUseCase>) -> Router {
@@ -66,13 +69,19 @@ async fn add_transaction(
     Path(id): Path<String>,
     Json(payload): Json<AddTransactionRequest>,
 ) -> impl IntoResponse {
+    let timestamp = payload
+        .timestamp
+        .and_then(|s| chrono::DateTime::parse_from_rfc3339(&s).ok())
+        .map(|dt| dt.with_timezone(&chrono::Utc))
+        .unwrap_or_else(chrono::Utc::now);
+
     let transaction = Transaction {
         id: uuid::Uuid::new_v4().to_string(),
         symbol: payload.symbol,
         transaction_type: payload.transaction_type,
         quantity: payload.quantity,
         price_per_share: payload.price_per_share,
-        timestamp: chrono::Utc::now(),
+        timestamp,
     };
 
     match use_case.add_transaction(&id, transaction).await {

@@ -37,4 +37,6 @@ export interface AddTransactionRequest {
   transaction_type: TransactionType;
   quantity: number;
   price_per_share: number;
+  /** Optional ISO date for purchase date (e.g. "2024-01-15"). If omitted, uses today. */
+  timestamp?: string;
 }

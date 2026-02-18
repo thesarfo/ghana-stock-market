@@ -138,18 +138,18 @@ export const Dashboard: React.FC = () => {
       </div>
 
       <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6">
-        {/* Market Stats Overview - Compact Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
+        {/* Market Stats Overview - Responsive grid: 1 col mobile, 2 cols sm, 5 cols lg */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
           {/* Market Cap */}
           <Card className="bg-primary-50 border-primary-100">
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-3">
-                <div className="size-10 bg-primary-100 rounded-lg flex items-center justify-center shrink-0">
-                  <Activity className="size-5 text-primary-600" />
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                <div className="size-8 sm:size-10 bg-primary-100 rounded-lg flex items-center justify-center shrink-0">
+                  <Activity className="size-4 sm:size-5 text-primary-600" />
                 </div>
-                <div className="min-w-0 flex-1">
+                <div className="min-w-0 flex-1 overflow-hidden">
                   <p className="text-xs font-medium text-gray-500 mb-0.5">Market Cap</p>
-                  <p className="text-xl font-bold text-gray-900 truncate tabular-nums">
+                  <p className="text-base sm:text-xl font-bold text-gray-900 tabular-nums break-words">
                     {marketSummary?.total_market_cap
                       ? `₵${formatLargeNumber(marketSummary.total_market_cap)}`
                       : '₵0.00'}
@@ -161,14 +161,14 @@ export const Dashboard: React.FC = () => {
 
           {/* Total Stocks */}
           <Card className="bg-primary-50 border-primary-100">
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-3">
-                <div className="size-10 bg-primary-100 rounded-lg flex items-center justify-center shrink-0">
-                  <Building2 className="size-5 text-primary-600" />
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                <div className="size-8 sm:size-10 bg-primary-100 rounded-lg flex items-center justify-center shrink-0">
+                  <Building2 className="size-4 sm:size-5 text-primary-600" />
                 </div>
-                <div className="min-w-0 flex-1">
+                <div className="min-w-0 flex-1 overflow-hidden">
                   <p className="text-xs font-medium text-gray-500 mb-0.5">Stocks</p>
-                  <p className="text-xl font-bold text-gray-900 tabular-nums">
+                  <p className="text-base sm:text-xl font-bold text-gray-900 tabular-nums">
                     {marketSummary?.total_stocks || stocks.length}
                   </p>
                 </div>
@@ -178,14 +178,14 @@ export const Dashboard: React.FC = () => {
 
           {/* Gainers */}
           <Card className="bg-success-50 border-success-100">
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-3">
-                <div className="size-10 bg-success-100 rounded-lg flex items-center justify-center shrink-0">
-                  <TrendingUp className="size-5 text-success-600" />
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                <div className="size-8 sm:size-10 bg-success-100 rounded-lg flex items-center justify-center shrink-0">
+                  <TrendingUp className="size-4 sm:size-5 text-success-600" />
                 </div>
-                <div className="min-w-0 flex-1">
+                <div className="min-w-0 flex-1 overflow-hidden">
                   <p className="text-xs font-medium text-gray-500 mb-0.5">Gainers</p>
-                  <p className="text-xl font-bold text-success-600 tabular-nums">
+                  <p className="text-base sm:text-xl font-bold text-success-600 tabular-nums">
                     {gainers.length}
                   </p>
                 </div>
@@ -195,14 +195,14 @@ export const Dashboard: React.FC = () => {
 
           {/* Losers */}
           <Card className="bg-danger-50 border-danger-100">
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-3">
-                <div className="size-10 bg-danger-100 rounded-lg flex items-center justify-center shrink-0">
-                  <TrendingDown className="size-5 text-danger-600" />
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                <div className="size-8 sm:size-10 bg-danger-100 rounded-lg flex items-center justify-center shrink-0">
+                  <TrendingDown className="size-4 sm:size-5 text-danger-600" />
                 </div>
-                <div className="min-w-0 flex-1">
+                <div className="min-w-0 flex-1 overflow-hidden">
                   <p className="text-xs font-medium text-gray-500 mb-0.5">Losers</p>
-                  <p className="text-xl font-bold text-danger-600 tabular-nums">
+                  <p className="text-base sm:text-xl font-bold text-danger-600 tabular-nums">
                     {losers.length}
                   </p>
                 </div>
@@ -212,14 +212,14 @@ export const Dashboard: React.FC = () => {
 
           {/* Total Volume */}
           <Card className="bg-primary-50 border-primary-100">
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-3">
-                <div className="size-10 bg-primary-100 rounded-lg flex items-center justify-center shrink-0">
-                  <BarChart3 className="size-5 text-primary-600" />
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                <div className="size-8 sm:size-10 bg-primary-100 rounded-lg flex items-center justify-center shrink-0">
+                  <BarChart3 className="size-4 sm:size-5 text-primary-600" />
                 </div>
-                <div className="min-w-0 flex-1">
+                <div className="min-w-0 flex-1 overflow-hidden">
                   <p className="text-xs font-medium text-gray-500 mb-0.5">Volume</p>
-                  <p className="text-xl font-bold text-gray-900 truncate tabular-nums">
+                  <p className="text-base sm:text-xl font-bold text-gray-900 tabular-nums break-words">
                     {formatLargeNumber(marketSummary?.total_volume || 0)}
                   </p>
                 </div>
@@ -234,31 +234,31 @@ export const Dashboard: React.FC = () => {
             {/* Top Gainers */}
             {marketSummary.top_gainers.length > 0 && (
               <Card>
-                <div className="p-4 border-b border-gray-100">
-                  <div className="flex items-center space-x-2">
-                    <div className="size-7 bg-success-100 rounded-lg flex items-center justify-center">
-                      <TrendingUp className="size-4 text-success-600" />
+                <div className="p-3 sm:p-4 border-b border-gray-100">
+                  <div className="flex items-center gap-2">
+                    <div className="size-6 sm:size-7 bg-success-100 rounded-lg flex items-center justify-center shrink-0">
+                      <TrendingUp className="size-3.5 sm:size-4 text-success-600" />
                     </div>
-                    <h2 className="text-base font-bold text-gray-900 text-balance">Top Gainers</h2>
+                    <h2 className="text-sm sm:text-base font-bold text-gray-900">Top Gainers</h2>
                   </div>
                 </div>
-                <CardContent className="p-4">
+                <CardContent className="p-3 sm:p-4">
                   <div className="space-y-2">
                     {marketSummary.top_gainers.map((stock, index) => (
                       <div
                         key={stock.name}
-                        className="flex items-center p-4 bg-success-50 rounded-lg border border-success-100 hover:border-success-200 transition-colors cursor-pointer"
+                        className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-success-50 rounded-lg border border-success-100 hover:border-success-200 transition-colors cursor-pointer min-w-0"
                         onClick={() => navigate(`/stock/${stock.name}`)}
                       >
-                        <div className="size-8 bg-success-600 text-white rounded-full flex items-center justify-center text-sm font-bold shrink-0">
+                        <div className="size-7 sm:size-8 bg-success-600 text-white rounded-full flex items-center justify-center text-xs sm:text-sm font-bold shrink-0">
                           {index + 1}
                         </div>
-                        <div className="flex-1 mx-4">
-                          <p className="font-bold text-gray-900">{stock.name}</p>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-gray-900 truncate">{stock.name}</p>
                           <p className="text-xs text-gray-600 tabular-nums">GHS {stock.price.toFixed(2)}</p>
                         </div>
                         <div className="text-right shrink-0">
-                          <p className="text-base font-bold text-success-600 tabular-nums">
+                          <p className="text-sm sm:text-base font-bold text-success-600 tabular-nums">
                             +{stock.change.toFixed(2)}%
                           </p>
                           <p className="text-xs text-gray-500 tabular-nums">
@@ -275,31 +275,31 @@ export const Dashboard: React.FC = () => {
             {/* Top Losers */}
             {marketSummary.top_losers.length > 0 && (
               <Card>
-                <div className="p-4 border-b border-gray-100">
-                  <div className="flex items-center space-x-2">
-                    <div className="size-7 bg-danger-100 rounded-lg flex items-center justify-center">
-                      <TrendingDown className="size-4 text-danger-600" />
+                <div className="p-3 sm:p-4 border-b border-gray-100">
+                  <div className="flex items-center gap-2">
+                    <div className="size-6 sm:size-7 bg-danger-100 rounded-lg flex items-center justify-center shrink-0">
+                      <TrendingDown className="size-3.5 sm:size-4 text-danger-600" />
                     </div>
-                    <h2 className="text-base font-bold text-gray-900 text-balance">Top Losers</h2>
+                    <h2 className="text-sm sm:text-base font-bold text-gray-900">Top Losers</h2>
                   </div>
                 </div>
-                <CardContent className="p-4">
+                <CardContent className="p-3 sm:p-4">
                   <div className="space-y-2">
                     {marketSummary.top_losers.map((stock, index) => (
                       <div
                         key={stock.name}
-                        className="flex items-center p-4 bg-danger-50 rounded-lg border border-danger-100 hover:border-danger-200 transition-colors cursor-pointer"
+                        className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-danger-50 rounded-lg border border-danger-100 hover:border-danger-200 transition-colors cursor-pointer min-w-0"
                         onClick={() => navigate(`/stock/${stock.name}`)}
                       >
-                        <div className="size-8 bg-danger-600 text-white rounded-full flex items-center justify-center text-sm font-bold shrink-0">
+                        <div className="size-7 sm:size-8 bg-danger-600 text-white rounded-full flex items-center justify-center text-xs sm:text-sm font-bold shrink-0">
                           {index + 1}
                         </div>
-                        <div className="flex-1 mx-4">
-                          <p className="font-bold text-gray-900">{stock.name}</p>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-gray-900 truncate">{stock.name}</p>
                           <p className="text-xs text-gray-600 tabular-nums">GHS {stock.price.toFixed(2)}</p>
                         </div>
                         <div className="text-right shrink-0">
-                          <p className="text-base font-bold text-danger-600 tabular-nums">
+                          <p className="text-sm sm:text-base font-bold text-danger-600 tabular-nums">
                             {stock.change.toFixed(2)}%
                           </p>
                           <p className="text-xs text-gray-500 tabular-nums">
@@ -317,14 +317,14 @@ export const Dashboard: React.FC = () => {
 
         {/* All Stocks Section */}
         <div>
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-xl font-bold text-gray-900 text-balance">All Stocks</h2>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+            <div className="min-w-0">
+              <h2 className="text-lg sm:text-xl font-bold text-gray-900">All Stocks</h2>
               <p className="text-xs text-gray-500 mt-0.5">
                 {gainers.length} rising • {losers.length} falling • {unchanged.length} unchanged
               </p>
             </div>
-            <div className="flex items-center space-x-2 text-xs">
+            <div className="flex items-center gap-2 text-xs shrink-0">
               <div className="flex items-center space-x-1.5 px-2.5 py-1 bg-success-50 rounded-lg">
                 <div className="size-1.5 bg-success-600 rounded-full"></div>
                 <span className="text-success-700 font-medium tabular-nums">{gainers.length}</span>

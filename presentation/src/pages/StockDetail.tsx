@@ -49,6 +49,10 @@ export const StockDetail: React.FC = () => {
   const [selectedPortfolioId, setSelectedPortfolioId] = useState('');
   const [transactionQty, setTransactionQty] = useState(100);
   const [transactionType, setTransactionType] = useState<TransactionType>('Buy' as TransactionType);
+  const [transactionPricePerShare, setTransactionPricePerShare] = useState<number>(0);
+  const [transactionDate, setTransactionDate] = useState<string>(() =>
+    new Date().toISOString().slice(0, 10)
+  );
   const [portfolioLoading, setPortfolioLoading] = useState(false);
 
   useEffect(() => {
@@ -109,6 +113,13 @@ export const StockDetail: React.FC = () => {
     }
   }, [showPortfolioModal]);
 
+  // When opening modal or stock data loads, set default price for transaction
+  useEffect(() => {
+    if (!showPortfolioModal || !stockData) return;
+    const price = stockData.live_data?.price ?? stockData.price ?? stockData.equity?.price ?? 0;
+    setTransactionPricePerShare(price);
+  }, [showPortfolioModal, stockData?.live_data?.price, stockData?.price, stockData?.equity?.price]);
+
   const loadPortfolios = async () => {
     try
     {
@@ -131,17 +142,19 @@ export const StockDetail: React.FC = () => {
     setPortfolioLoading(true);
     try
     {
-      const price = stockData.live_data?.price || stockData.price || stockData.equity?.price || 0;
+      const price = transactionPricePerShare > 0
+        ? transactionPricePerShare
+        : (stockData.live_data?.price || stockData.price || stockData.equity?.price || 0);
 
       await portfolioService.addTransaction(selectedPortfolioId, {
         symbol: symbol!,
         transaction_type: transactionType,
         quantity: transactionQty,
         price_per_share: price,
+        timestamp: transactionDate ? `${transactionDate}T12:00:00.000Z` : undefined,
       });
 
       setShowPortfolioModal(false);
-      // Optional: Show toast notification
     } catch (err)
     {
       console.error('Failed to add transaction', err);
@@ -542,6 +555,30 @@ export const StockDetail: React.FC = () => {
                 className="input"
                 min="1"
                 required
+              />
+            </div>
+
+            <div>
+              <label className="label">Price per share (GHS)</label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={transactionPricePerShare || ''}
+                onChange={(e) => setTransactionPricePerShare(Number(e.target.value) || 0)}
+                className="input"
+                placeholder={String(currentPrice || '0.00')}
+              />
+              <p className="text-xs text-gray-500 mt-1">Current price: GHS {formatCurrency(currentPrice)}</p>
+            </div>
+
+            <div>
+              <label className="label">Purchase date</label>
+              <input
+                type="date"
+                value={transactionDate}
+                onChange={(e) => setTransactionDate(e.target.value)}
+                className="input"
               />
             </div>
 
